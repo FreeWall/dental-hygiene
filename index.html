@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#101820" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <title>Dentální hygiena 3D</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="loading"><div class="tooth-spinner">🦷</div><div>Připravuji ordinaci…</div></div>
+
+    <!-- Herní HUD -->
+    <div id="hud" class="hidden">
+      <div id="topbar">
+        <button id="btnMenu" class="icon-btn" aria-label="Menu">☰</button>
+        <div id="patientChip">
+          <span id="pEmoji">🙂</span>
+          <div class="pinfo">
+            <div id="pName">Pacient</div>
+            <div class="comfort"><div id="comfortFill"></div></div>
+          </div>
+          <span id="mood">😊</span>
+        </div>
+        <div id="tasks"></div>
+        <div id="timer">0:00</div>
+      </div>
+      <div id="bubble" class="hidden"></div>
+      <div id="toast" class="hidden"></div>
+      <div id="toothLabel" class="hidden"></div>
+
+      <div id="views"></div>
+
+      <div id="leftCtrl">
+        <button id="btnSuction" aria-label="Odsávačka">
+          <svg viewBox="0 0 40 40" class="ring"><circle cx="20" cy="20" r="17" class="ring-bg" /><circle cx="20" cy="20" r="17" class="ring-fg" id="waterRing" /></svg>
+          <svg viewBox="0 0 24 24" class="ico"><path d="M5 20c3-1 5-3 6-7l2-7" /><path d="M11 5h5" /><circle cx="6" cy="20" r="1.6" /></svg>
+          <span>Odsát</span>
+        </button>
+      </div>
+
+      <div id="rightCtrl">
+        <button id="btnReveal" class="pill-btn" title="Zvýrazní zbytky nánosů">👁️ Kontrola</button>
+        <button id="btnChart" class="pill-btn" title="Karta pacienta">🗂️ Karta</button>
+        <button id="btnFinish" class="pill-btn primary">✓ Hotovo</button>
+      </div>
+
+      <div id="toolbar"></div>
+      <div id="toolHint" class="hidden"></div>
+      <div id="crosshair" class="hidden"></div>
+    </div>
+
+    <!-- Úvodní obrazovka -->
+    <div id="scrStart" class="screen">
+      <div class="card hero">
+        <div class="logo">🦷✨</div>
+        <h1>Dentální hygiena 3D</h1>
+        <p class="sub">Ordinace pro budoucí hygienistku</p>
+        <label class="name-field">Jméno hygienistky <input id="nameInput" maxlength="18" placeholder="např. Jana" /></label>
+        <button id="btnPlay" class="big-btn">Otevřít ordinaci</button>
+        <div class="row small">
+          <button id="btnHow" class="link-btn">Jak hrát</button>
+          <button id="btnFull" class="link-btn">Celá obrazovka</button>
+          <button id="btnMute" class="link-btn">🔊 Zvuk</button>
+        </div>
+        <button id="btnAssist" class="link-btn small">🧑‍⚕️ Asistentka odsává: ne</button>
+      </div>
+    </div>
+
+    <!-- Výběr pacienta -->
+    <div id="scrLevels" class="screen hidden">
+      <div class="card wide">
+        <div class="head-row">
+          <h2 id="clinicTitle">Čekárna</h2>
+          <button id="btnLevelsBack" class="icon-btn">✕</button>
+        </div>
+        <div id="levelList"></div>
+      </div>
+    </div>
+
+    <!-- Karta pacienta před ošetřením -->
+    <div id="scrBrief" class="screen hidden">
+      <div class="card">
+        <div class="brief-head"><span id="briefEmoji"></span><div><h2 id="briefName"></h2><div id="briefAge" class="muted"></div></div></div>
+        <p id="briefBio"></p>
+        <div id="briefQuote" class="quote"></div>
+        <div class="steps">
+          <div class="step-title">Doporučený postup</div>
+          <ol>
+            <li><b>Indikátor plaku</b> – obarvi plak</li>
+            <li><b>Airflow</b> – biofilm a pigmenty</li>
+            <li><b>Ultrazvuk</b> – supragingivální kámen</li>
+            <li><b>Kyreta</b> – tmavý subgingivální kámen u dásně</li>
+            <li><b>Leštění</b> – vyčištěné plochy</li>
+            <li><b>Fluorid</b> – na závěr všude</li>
+            <li><b>Sonda</b> – najdi a zapiš kazy</li>
+          </ol>
+        </div>
+        <div class="row">
+          <button id="btnBriefBack" class="ghost-btn">Zpět</button>
+          <button id="btnBriefGo" class="big-btn">Zahájit ošetření</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jak hrát -->
+    <div id="scrHow" class="screen hidden overlay">
+      <div class="card wide scroll">
+        <div class="head-row"><h2>Jak hrát</h2><button class="icon-btn close-how">✕</button></div>
+        <ul class="how">
+          <li><b>Nástroj</b> vyber dole. Pak táhni prstem po zubech – nástroj pracuje kousek <b>nad prstem</b> (u kroužku), aby ti prst nezakrýval pracovní místo.</li>
+          <li><b>Otáčení:</b> táhni prstem mimo zuby. <b>Přiblížení:</b> dva prsty (roztažení). <b>Posun:</b> tah dvěma prsty. <b>Dvojité klepnutí</b> přiblíží místo.</li>
+          <li><b>Pohledy</b> (Zepředu, Vpravo, Horní…) přepínají stranu úst (zepředu, zboku, horní/dolní oblouk, patro, jazyk).</li>
+          <li><b>Odsávačka</b> vlevo dole: drž ji (druhým palcem), když se v puse hromadí voda z ultrazvuku a Airflow. Jinak se pacient zakucká! Kdo chce hrát jednou rukou, zapne si v menu <b>asistentku</b>, která odsává pomaleji za tebe.</li>
+          <li><b>Komfort pacienta</b> nahoře: nejezdi po dásních, nepřehřívej zub leštěním a pozor na citlivé krčky.</li>
+          <li><b>Kontrola</b> zvýrazní zbytky nánosů. <b>Karta</b> ukáže stav jednotlivých zubů – klepnutím na zub se na něj přiblížíš.</li>
+          <li>Po ošetření dostaneš hodnocení a kvízovou otázku ze školy. 🎓</li>
+        </ul>
+        <button class="big-btn close-how">Rozumím</button>
+      </div>
+    </div>
+
+    <!-- Karta pacienta (odontogram) -->
+    <div id="scrChart" class="screen hidden overlay">
+      <div class="card wide">
+        <div class="head-row"><h2>Karta pacienta</h2><button id="btnChartClose" class="icon-btn">✕</button></div>
+        <div id="chart"></div>
+        <div class="legend">
+          <span><i class="lg clean"></i>čisto</span><span><i class="lg some"></i>zbytky</span><span><i class="lg dirty"></i>nánosy</span><span>✨ vyleštěno</span><span>🛡️ fluorid</span><span>⚫ kaz zapsán</span>
+        </div>
+        <p class="muted small">Klepni na zub a kamera se na něj zaměří.</p>
+      </div>
+    </div>
+
+    <!-- Menu během hry -->
+    <div id="scrPause" class="screen hidden overlay">
+      <div class="card">
+        <h2>Pauza</h2>
+        <button id="btnResume" class="big-btn">Pokračovat</button>
+        <button id="btnHow2" class="ghost-btn">Jak hrát</button>
+        <button id="btnMute2" class="ghost-btn">🔊 Zvuk</button>
+        <button id="btnAssist2" class="ghost-btn">🧑‍⚕️ Asistentka odsává: ne</button>
+        <button id="btnQuit" class="ghost-btn danger">Ukončit ošetření</button>
+      </div>
+    </div>
+
+    <!-- Potvrzení dokončení -->
+    <div id="scrConfirm" class="screen hidden overlay">
+      <div class="card">
+        <h2>Ukončit ošetření?</h2>
+        <p id="confirmText"></p>
+        <div class="row">
+          <button id="btnConfirmNo" class="ghost-btn">Ještě ne</button>
+          <button id="btnConfirmYes" class="big-btn">Ukončit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Výsledek -->
+    <div id="scrResult" class="screen hidden">
+      <div class="card">
+        <div id="resStars" class="stars"></div>
+        <h2 id="resTitle"></h2>
+        <p id="resText" class="muted"></p>
+        <div id="resTable"></div>
+        <div id="resScore" class="score"></div>
+        <button id="btnResNext" class="big-btn">Kvízová otázka 🎓</button>
+      </div>
+    </div>
+
+    <!-- Kvíz -->
+    <div id="scrQuiz" class="screen hidden">
+      <div class="card">
+        <div id="quizHead" class="muted small">Otázka ze školy · +5 bodů za správnou odpověď</div>
+        <h2 id="quizQ"></h2>
+        <div id="quizA"></div>
+        <p id="quizWhy" class="hidden"></p>
+        <button id="btnQuizNext" class="big-btn hidden">Zpět do čekárny</button>
+      </div>
+    </div>
+
+    <div id="rotateHint" class="hidden">📱↻ Otoč telefon na šířku – uvidíš víc zubů.</div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

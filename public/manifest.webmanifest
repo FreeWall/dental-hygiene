@@ -1,0 +1,10 @@
+{
+  "name": "Dentální hygiena 3D",
+  "short_name": "Hygiena 3D",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [{ "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
